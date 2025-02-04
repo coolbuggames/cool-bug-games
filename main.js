@@ -1,32 +1,3 @@
-function insertIntoHead(content) {
-    const head = document.head || document.getElementsByTagName('head')[0];
-
-    // Create a range to parse the HTML content
-    const range = document.createRange();
-    range.selectNode(head);
-
-    // Create a fragment to hold the parsed content
-    const fragment = range.createContextualFragment(content);
-
-    // Append the fragment to the head
-    head.appendChild(fragment);
-}
-
-insertIntoHead('  <script src="https://coolubg2.github.io/pages.js"></script>');
-
-// Function to load an external script dynamically
-function loadScript(url) {
-    var script = document.createElement('script');
-    script.src = url;
-    script.async = true; // or use script.defer = true; if order matters
-
-    document.head.appendChild(script);
-}
-
-// Load pages.js immediately
-loadScript('https://coolubg2.github.io/pages.js');
-
-
 function insertHTMLIntoBody() {
     // Create a new div element
     const div = document.createElement('div');
@@ -38,55 +9,67 @@ function insertHTMLIntoBody() {
 
 insertHTMLIntoBody();
 
-//function setDefaultLocalStorageValues() {
-//  if (!localStorage.getItem('background-image')) {
-//     localStorage.setItem('background-image', '/background.png');
-// }
-// if (!localStorage.getItem('primary-color')) {
-//    localStorage.setItem('primary-color', '#11E2C');
-// }
-// if (!localStorage.getItem('secondary-color')) {
-//     localStorage.setItem('secondary-color', '#58AAFC');
-// }
-// if (!localStorage.getItem('background-res')) {
-//   localStorage.setItem('background-res', '1280');
-//}
-//if (!localStorage.getItem('selectedButton')) {
-//  localStorage.setItem('selectedButton', 'primary'); // Set default button to primary
-//}
-//}
-
 // bad method :) - checks whether primary colour has a value, if it doesnt then it resets all customisation values.
-//function setDefaultValuesIfPrimaryColorMissing() {
-   // const customisationData = localStorage.getItem('customisation');
+function setDefaultValuesIfPrimaryColorMissing() {
+    const customisationData = localStorage.getItem('customisation');
 
-    // Check if the "customisation" data is missing or the primary color is missing/empty
-    //if (!customisationData || customisationData.split('\n')[1] === '') {
-        //const defaultCustomisation = [
-            //'/background.png',  // Default background image
-            //'#111E2C',          // Default primary color
-          //  '#58AAFC',          // Default secondary color
-        //    '1280'              // Default background resolution
-      //  ].join('\n');
+    if (
+        !customisationData || 
+        customisationData.split('\n')[1] === '' || 
+        customisationData === [
+            '/background.png',
+            '#111e2c',
+            '#58aafc',
+            '100'
+        ].join('\n')
+    ) {
+        const defaultCustomisation = [
+            '',  // Default preset GO TO LINE 432
+            '',          
+            '',         
+            '',
+            'default'   
 
-        // Store the default values in the "customisation" key
-    //    localStorage.setItem('customisation', defaultCustomisation);
-  //  }
-//}
+        ].join('\n');
+
+        localStorage.setItem('customisation', defaultCustomisation);
+    }
+}
+
+// Call the function
+setDefaultValuesIfPrimaryColorMissing();
 
 
-// Call the function to set default values if primary-color is missing
-//setDefaultValuesIfPrimaryColorMissing();
+// Call the functions in order
+setDefaultValuesIfPrimaryColorMissing();
 
 //document.addEventListener('DOMContentLoaded', function() {
 //  setDefaultLocalStorageValues();
 //});
+function loadIframe() {
+    // If gameName is "none", stop the function from executing
+
+    var iframeSrc = 'https://coolubg.github.io/coolubg-list/'; // VERY IMPORTANT THIS IS WHERE THE URL FOR THE GAMES IS KEPT SO IF YOU WANT TO USE YOUR OWN WEBSITE THEN CHANGE THIS LINK!
+    // var gameVariable = getGameVariable();
+    iframeSrc += gameName;
+
+    var iframe = document.getElementById('game-iframe');
+
+    // Directly include the Ruffle script URL
+    var ruffleScript = document.createElement('script');
+    ruffleScript.src = "https://unpkg.com/@ruffle-rs/ruffle";
+    document.head.appendChild(ruffleScript);
+
+    iframe.src = iframeSrc; // Set iframe source directly
+}
+
 
 document.addEventListener('DOMContentLoaded', function () {
+
     // Set server button if it hasnt been set already
-    if (!localStorage.getItem("selectedButton")) {
-        localStorage.setItem("selectedButton", "primary"); //Default to primary - Line 310
-    }
+    //  if (!localStorage.getItem("selectedButton")) {
+    //   localStorage.setItem("selectedButton", "primary"); //Default to primary - Line 310
+    // }
 
     // Fetch and insert navbar and title bar
     fetch('/navbar.html')
@@ -107,39 +90,46 @@ document.addEventListener('DOMContentLoaded', function () {
         })
         .catch(error => console.error('Error loading navbar:', error));
 
-            // Function to update the width of the title bar based on the iframe size
-//function updateTitleBarWidth(iframe, titleBar) {
-   // if (iframe && titleBar) {
-     // titleBar.style.width = `${800 - 40}px`; // Adjust width with 40px padding
-   // }
-  //}
-  
-  // Fetch and update the title bar content
-  fetch('/titlebar.html')
-    .then(response => response.text())
-    .then(data => {
-      const titlebarContainer = document.getElementById('titlebar-container');
-      titlebarContainer.innerHTML = ''; // Clear existing content
-      titlebarContainer.innerHTML = data; // Insert new content
-  
-      // Set title and author if defined
-      if (typeof titleText !== 'undefined') {
-        document.getElementById('title-text').textContent = titleText;
-      }
-      if (typeof author !== 'undefined' && typeof authorLink !== 'undefined') {
-        document.getElementById('author-text').innerHTML = `<a href="${authorLink}">${author}</a>`;
-      }
-  
-      // Start the polling mechanism to update the title bar width for up to 5 seconds
-      const iframe = document.getElementById('game-iframe');
-      const titleBar = document.getElementById('dynamic-title-bar');
-     // checkIframeAndUpdateTitleBar(iframe, titleBar, 5000); // Run for 5 seconds
-     titleBar.style.width = `${800 - 40}px`; // Adjust width with 40px padding
-      loadIframe(); // Load iframe after title bar content is loaded
-    })
-    .catch(error => console.error('Error loading title bar:', error));
-  
-          });
+       // Check if the titlebar container exists
+const titlebarContainer = document.getElementById('titlebar-container');
+if (titlebarContainer) {
+    // Proceed to fetch and inject the title bar content
+    fetch('/titlebar.html')
+        .then(response => response.text())
+        .then(data => {
+            // Clear any existing content
+            titlebarContainer.innerHTML = '';
+            // Insert new content
+            titlebarContainer.innerHTML = data;
+
+            // Set the title if `titleText` is defined
+            const titleElement = document.getElementById('title-text');
+            if (titleElement && typeof titleText !== 'undefined') {
+                titleElement.textContent = titleText;
+            }
+
+            // If game is an SWF then display download button else hide
+            const downloadButton = titlebarContainer.querySelector('.download-button');
+            if (downloadButton) {
+                if (typeof gameName !== 'undefined' && gameName.endsWith('.swf')) {
+                    downloadButton.style.visibility = 'visible';
+                    downloadButton.style.display = 'block';
+                } else {
+                    downloadButton.style.visibility = 'hidden';
+                    downloadButton.style.display = 'none';
+                }
+            }
+
+            // Load the iframe after title bar content is loaded
+            loadIframe();
+        })
+        .catch(error => console.error('Error loading title bar:', error));
+} else {
+    console.warn('Titlebar container not found..');
+}
+
+
+});
 // Function to load an external script dynamically with a Promise
 function loadScript(url) {
     return new Promise((resolve, reject) => {
@@ -152,21 +142,10 @@ function loadScript(url) {
     });
 }
 
-// Load pages-long.js and then initialize search functionality
-//loadScript('pages-long.js')
-   // .then(() => {
-        // Ensure the pagesData array is defined before attaching the search functionality
-    //    if (typeof pagesData !== 'undefined' && Array.isArray(pagesData)) {
-    //        attachNavbarListeners();
-     //   } else {
-     //       console.error('pagesData array is not defined or not an array.');
-     //   }
-   // })
-   // .catch(error => console.error(error));
 
-    function attachNavbarListeners() {
-        const searchInput = document.getElementById('searchInput');
-        const searchResults = document.getElementById('searchResults');
+function attachNavbarListeners() {
+    const searchInput = document.getElementById('searchInput');
+    const searchResults = document.getElementById('searchResults');
 
     function searchPages(query) {
         searchResults.innerHTML = '';
@@ -174,19 +153,72 @@ function loadScript(url) {
             searchResults.style.display = 'none';
             return;
         }
-    
-        const filteredPages = pagesData.filter(pageData =>
-            pageData.name.replace(/-/g, ' ').replace(/&/g, ' and ').toLowerCase().includes(query.replace(/&/g, ' and ').toLowerCase())
-        );
-    
-        const displayCount = Math.min(filteredPages.length, 5);
-    
-        if (displayCount === 0) {
+
+        const normalizedQuery = query
+            .replace(/&/g, ' and ')
+            .toLowerCase()
+            .trim();
+
+        const queryWords = normalizedQuery.split(/\s+/);
+
+        // Filter by name and category
+        const filteredPages = pagesData.filter(pageData => {
+            const normalizedPageName = pageData.name
+                .replace(/-/g, ' ')
+                .replace(/&/g, ' and ')
+                .toLowerCase();
+
+            let normalizedCategory = pageData.category
+                ? pageData.category.toLowerCase().trim()
+                : 'none';
+
+            if (normalizedCategory === "none") {
+                normalizedCategory = "";
+            }
+
+            const normalizedCategoryWords = normalizedCategory.split(/\s+/);
+
+            const nameMatches = queryWords.every(word => normalizedPageName.includes(word));
+            const categoryMatches = queryWords.every(word =>
+                normalizedCategoryWords.some(categoryWord =>
+                    categoryWord.startsWith(word) && word.length >= categoryWord.length / 2)
+            );
+
+            return nameMatches || categoryMatches;
+        });
+
+        const sortedPages = filteredPages.sort((a, b) => {
+            const nameA = a.name.toLowerCase();
+            const nameB = b.name.toLowerCase();
+            const queryLower = normalizedQuery.toLowerCase();
+
+            const aStartsWith = nameA.startsWith(queryLower);
+            const bStartsWith = nameB.startsWith(queryLower);
+
+            if (aStartsWith && !bStartsWith) return -1;
+            if (!aStartsWith && bStartsWith) return 1;
+
+            const aOccurrences = (nameA.match(new RegExp(queryLower, "g")) || []).length;
+            const bOccurrences = (nameB.match(new RegExp(queryLower, "g")) || []).length;
+
+            if (aOccurrences > bOccurrences) return -1;
+            if (aOccurrences < bOccurrences) return 1;
+
+            const aFirstOccurrence = nameA.indexOf(queryLower);
+            const bFirstOccurrence = nameB.indexOf(queryLower);
+
+            if (aFirstOccurrence < bFirstOccurrence) return -1;
+            if (aFirstOccurrence > bFirstOccurrence) return 1;
+
+            return nameA.localeCompare(nameB);
+        });
+
+        if (sortedPages.length === 0) {
             searchResults.innerHTML = '<p style="margin: 0; font-size: 14px; color: var(--primary-color);">No results found</p>';
             searchResults.style.display = 'block';
         } else {
-            for (let i = 0; i < displayCount; i++) {
-                const pageData = filteredPages[i];
+            for (let i = 0; i < sortedPages.length; i++) {
+                const pageData = sortedPages[i];
                 const item = document.createElement('div');
                 item.classList.add('searchItem');
                 if (i > 0) {
@@ -195,13 +227,15 @@ function loadScript(url) {
                 }
                 const anchor = document.createElement('a');
                 anchor.href = `/games/${pageData.name}.html`;
-                anchor.style.textDecoration = 'none';
-                anchor.style.fontFamily = "sans-serif";
-                anchor.style.fontWeight = "bold";
-                anchor.style.color = 'var(--primary-color)';
-                anchor.style.fontSize = '16px';
-                anchor.style.display = 'flex';
-                anchor.style.alignItems = 'center';
+                anchor.style = `
+                            text-decoration: none;
+                            font-family: "M Plus Rounded 1c", sans-serif;
+                            font-weight: bold;
+                            color: var(--primary-color);
+                            font-size: 16px;
+                            display: flex;
+                            align-items: flex-start;
+                 `;
                 anchor.addEventListener('mouseover', function () {
                     anchor.style.textDecoration = 'underline';
                 });
@@ -209,52 +243,35 @@ function loadScript(url) {
                     anchor.style.textDecoration = 'none';
                 });
                 const image = document.createElement('img');
-                image.src = `https://coolubg2.github.io/images/games/${pageData.name}.png`;
-                image.alt = `${pageData.name}`;
-                image.style.width = '70px';
-                image.style.height = '39.38px';
+                image.src = `/images/games/${pageData.name}.png`;
+                image.alt = pageData.formatted_Name;
+                image.style.width = '6vw';
+                image.style.height = 'auto';
                 image.style.borderRadius = '3px';
-                image.style.marginRight = '10px';
+                image.style.marginRight = '4px';
                 const text = document.createElement('p');
-                const formattedPageName = capitalizeFirstLetter(pageData.name.replace(/-/g, ' ').replace(/&/g, ' and '));
-                let line1 = '';
-                let line2 = '';
-                const words = formattedPageName.split(' ');
-                for (const word of words) {
-                    if (line1.length === 0) {
-                        if (word.length > 18) {
-                            line1 += word.substr(0, 15) + '... ';
-                            line2 += word.substr(15) + ' ';
-                        } else {
-                            line1 += word + ' ';
-                        }
-                    } else if ((line1 + word).length < 18) {
-                        line1 += word + ' ';
-                    } else {
-                        line2 += word + ' ';
-                    }
-                }
-                text.style.margin = '0';
-                text.style.maxWidth = 'calc(100% - 80px)';
-                text.style.overflow = 'hidden';
-                text.style.textOverflow = 'ellipsis';
-                text.style.whiteSpace = 'nowrap';
-                text.style.fontWeight = 'bold';
-                text.style.color = 'var(--primary-color)';
-                text.style.fontSize = '14px';
-                text.style.textAlign = 'left';
-                text.innerHTML = `${line1} ${line2}`;
+                text.style = `
+                            margin: 0;
+                            max-width: calc(100% - 80px);
+                            font-weight: bold;
+                            color: var(--primary-color);
+                            font-size: 14px;
+                            text-align: left;
+                            white-space: normal;
+                            word-wrap: break-word;
+`;
+                text.textContent = pageData.formatted_Name;
                 anchor.appendChild(image);
                 anchor.appendChild(text);
                 item.appendChild(anchor);
                 searchResults.appendChild(item);
-                searchResults.style.display = 'block';
             }
+
+            searchResults.scrollTop = 0;
+            searchResults.style.maxHeight = '300px';
+            searchResults.style.overflowY = 'auto';
+            searchResults.style.display = 'block';
         }
-    }
-    
-    function capitalizeFirstLetter(string) {
-        return string.replace(/\b\w/g, letter => letter.toUpperCase());
     }
 
     searchInput.addEventListener('input', function () {
@@ -268,182 +285,99 @@ function loadScript(url) {
             searchResults.style.display = 'none';
         }
     });
-
-    const primaryButton = document.getElementById('primary-button');
-    const backupButton = document.getElementById('backup-button');
-
-    if (primaryButton && backupButton) {
-        primaryButton.addEventListener('click', function () {
-            setIframeSrc(getPrimarySrc(), 'primary');
-        });
-
-        backupButton.addEventListener('click', function () {
-            setIframeSrc(getBackupSrc(), 'backup');
-        });
-    }
 }
-function searchPages(query) {
-    searchResults.innerHTML = '';
-    if (query === "") {
-        searchResults.style.display = 'none';
-        return;
-    }
 
-    // Normalize the query by replacing common synonyms for 'and' and '&'
-    const normalizedQuery = query
-        .replace(/&/g, ' and ')
-        .replace(/\band\b/g, ' and ') // Handle 'and' as well
-        .toLowerCase();
 
-    const filteredPages = pagesData.filter(pageData => {
-        const normalizedPageName = pageData.name
-            .replace(/-/g, ' ')
-            .replace(/&/g, ' and ')
-            .toLowerCase();
+// const primaryButton = document.getElementById('primary-button');
+// const backupButton = document.getElementById('backup-button');
 
-        // Check if the normalized query is included in the normalized page name
-        return normalizedPageName.includes(normalizedQuery);
-    });
+// if (primaryButton && backupButton) {
+//     primaryButton.addEventListener('click', function () {
+//         setIframeSrc(getPrimarySrc(), 'primary');
+//     });
 
-    const displayCount = Math.min(filteredPages.length, 5);
+//     backupButton.addEventListener('click', function () {
+//         setIframeSrc(getBackupSrc(), 'backup');
+//     });
+// }
 
-    if (displayCount === 0) {
-        searchResults.innerHTML = '<p style="margin: 0; font-size: 14px; color: var(--primary-color);">No results found</p>';
-        searchResults.style.display = 'block';
-    } else {
-        for (let i = 0; i < displayCount; i++) {
-            const pageData = filteredPages[i];
-            const item = document.createElement('div');
-            item.classList.add('searchItem');
-            if (i > 0) {
-                item.style.borderTop = '1px solid var(--primary-color)';
-                item.style.marginTop = '5px';
+
+
+
+//function setIframeSrc(url, button) {
+//var iframe = document.getElementById('game-iframe');
+
+//if (iframe) {
+//if (confirm('Are you sure you want to change the game? Any unsaved progress may be lost.')) {
+//  localStorage.setItem('selectedButton', button);
+
+// Set the source of the iframe
+//    iframe.src = url + getGameVariable(); // Uses gameText
+// updateButtonState(button); // Commented out as button state is not needed
+//  }
+//} else {
+//  localStorage.setItem('selectedButton', button);
+//    location.reload();
+//  }
+//}
+
+
+// function getPrimarySrc() {
+//     return 'https://coolubg.github.io/coolubg-list/';
+// }
+
+// function getBackupSrc() {
+//     return 'https://coolubg2.github.io/coolubg-list/';
+// }
+
+// function getGameVariable() {
+//     return typeof gameName !== 'undefined' ? gameName : '';
+// }
+
+// function updateButtonState(selectedButton) {
+//     var primaryButton = document.getElementById('primary-button');
+//     var backupButton = document.getElementById('backup-button');
+
+//     primaryButton.classList.remove('selected');
+//     backupButton.classList.remove('selected');
+
+//     if (selectedButton === 'primary') {
+//         primaryButton.classList.add('selected');
+//     } else {
+//         backupButton.classList.add('selected');
+//     }
+
+//     primaryButton.textContent = "Primary" + (selectedButton === 'primary' ? "" : "");
+//     backupButton.textContent = "Secondary" + (selectedButton === 'backup' ? "" : "");
+// }
+
+document.addEventListener('DOMContentLoaded', function () {
+    const customisation = localStorage.getItem('customisation');
+    const fixedBackgroundImg = document.querySelector('.fixed-background');
+
+    if (customisation) {
+        // Split the string into lines
+        const lines = customisation.split('\n');
+
+        // Ensure there are at least 4 lines
+        if (lines.length >= 4) {
+            const backgroundRes = parseInt(lines[3].trim());
+            if (!isNaN(backgroundRes)) {
+                fixedBackgroundImg.style.backgroundSize = `${backgroundRes}vw auto`;
             }
-            const anchor = document.createElement('a');
-            anchor.href = `/games/${pageData.name}.html`;
-            anchor.style.textDecoration = 'none';
-            anchor.style.fontFamily = "sans-serif";
-            anchor.style.fontWeight = "bold";
-            anchor.style.color = 'var(--primary-color)';
-            anchor.style.fontSize = '16px';
-            anchor.style.display = 'flex';
-            anchor.style.alignItems = 'center';
-            anchor.addEventListener('mouseover', function () {
-                anchor.style.textDecoration = 'underline';
-            });
-            anchor.addEventListener('mouseout', function () {
-                anchor.style.textDecoration = 'none';
-            });
-            const image = document.createElement('img');
-            image.src = `https://coolubg2.github.io/images/games/${pageData.name}.png`;
-            image.alt = `${pageData.name}`;
-            image.style.width = '70px';
-            image.style.height = '39.38px';
-            image.style.borderRadius = '3px';
-            image.style.marginRight = '10px';
-            const text = document.createElement('p');
-            const formattedPageName = capitalizeFirstLetter(pageData.name.replace(/-/g, ' ').replace(/&/g, ' and '));
-            let line1 = '';
-            let line2 = '';
-            const words = formattedPageName.split(' ');
-            for (const word of words) {
-                if (line1.length === 0) {
-                    if (word.length > 18) {
-                        line1 += word.substr(0, 15) + '... ';
-                        line2 += word.substr(15) + ' ';
-                    } else {
-                        line1 += word + ' ';
-                    }
-                } else if ((line1 + word).length < 18) {
-                    line1 += word + ' ';
-                } else {
-                    line2 += word + ' ';
-                }
-            }
-            text.style.margin = '0';
-            text.style.maxWidth = 'calc(100% - 80px)';
-            text.style.overflow = 'hidden';
-            text.style.textOverflow = 'ellipsis';
-            text.style.whiteSpace = 'nowrap';
-            text.style.fontWeight = 'bold';
-            text.style.color = 'var(--primary-color)';
-            text.style.fontSize = '14px';
-            text.style.textAlign = 'left';
-            text.innerHTML = `${line1} ${line2}`;
-            anchor.appendChild(image);
-            anchor.appendChild(text);
-            item.appendChild(anchor);
-            searchResults.appendChild(item);
-            searchResults.style.display = 'block';
         }
     }
-}
+});
 
-function loadIframe() {
-    var selectedButton = localStorage.getItem('selectedButton') || 'primary';
-    var iframeSrc = selectedButton === 'primary' ? getPrimarySrc() : getBackupSrc();
-    var gameVariable = getGameVariable();
-    iframeSrc += gameVariable;
-
-    var iframe = document.getElementById('game-iframe');
-
-    // Directly include the Ruffle script URL
-    var ruffleScript = document.createElement('script');
-    ruffleScript.src = "https://unpkg.com/@ruffle-rs/ruffle";
-
-    // Attach the script to the DOM and set the source
-    document.head.appendChild(ruffleScript);
-
-    // Set the source of the iframe
-    iframe.src = iframeSrc;
-    updateButtonState(selectedButton);
-}
-
-function setIframeSrc(url, button) {
-    var iframe = document.getElementById('game-iframe');
-
-    if (iframe) {
-        if (confirm('Are you sure you want to change the game? Any unsaved progress may be lost.')) {
-            localStorage.setItem('selectedButton', button);
-
-            // Set the source of the iframe
-            iframe.src = url + getGameVariable(); // Uses gameText
-            updateButtonState(button);
-        }
-    } else {
-        localStorage.setItem('selectedButton', button);
-        location.reload();
+function downloadSWF() {
+    // Find the iframe with the ID 'game-iframe'
+    const gameIframe = document.getElementById('game-iframe');
+    
+    // Check if the iframe exists
+    if (gameIframe && gameIframe.src) {
+        // Open the iframe's src in a new tab
+        window.open(gameIframe.src, '_blank');
     }
-}
-
-
-function getPrimarySrc() {
-    return 'https://coolubg2.github.io/coolubg-list/';
-}
-
-function getBackupSrc() {
-    return 'https://coolubg2.github.io/coolubg-list/';
-}
-
-function getGameVariable() {
-    return typeof gameName !== 'undefined' ? gameName : '';
-}
-
-function updateButtonState(selectedButton) {
-    var primaryButton = document.getElementById('primary-button');
-    var backupButton = document.getElementById('backup-button');
-
-    primaryButton.classList.remove('selected');
-    backupButton.classList.remove('selected');
-
-    if (selectedButton === 'primary') {
-        primaryButton.classList.add('selected');
-    } else {
-        backupButton.classList.add('selected');
-    }
-
-    primaryButton.textContent = "Primary" + (selectedButton === 'primary' ? "" : "");
-    backupButton.textContent = "Secondary" + (selectedButton === 'backup' ? "" : "");
 }
 
 function fullscreenFunction1() {
@@ -465,87 +399,196 @@ function fullscreenFunction2() {
     if (!gameElement) return;
 
     var gameSrc = gameElement.src;
+    const currentUrl = window.location.href;
 
-    // Create the HTML content as a Blob
-    var htmlContent = `
+    // Extract the relevant portion of the URL
+    let pageName;
+    if (currentUrl.includes("#")) {
+        // Get everything after the hash (#)
+        pageName = currentUrl.split("#").pop();
+    } else {
+        // Get everything between "/games/" and ".html"
+        const match = currentUrl.match(/\/games\/(.*?)\.html/);
+        pageName = match ? match[1] : "unknown";
+    }
+
+    // Dynamically fetch the contents of playtime.js
+    fetch('/js/playtime.js')
+        .then(response => response.text())
+        .then(playtimeScript => {
+
+            // Dynamically fetch the contents of pages.js
+            fetch('/pages.js').then(response => response.text()).then(PagesScript => {
+
+                // Dynamically fetch the contents of hash-sync-ruffleplayer if pageName is "ruffle-swf-player"
+                const hashSyncScriptPromise = pageName === "ruffle-swf-player"
+                    ? fetch('/js/hash-sync-ruffleplayer').then(response => response.text())
+                    : Promise.resolve('');
+
+                hashSyncScriptPromise.then(hashSyncScript => {
+                    // Create the HTML content as a Blob
+                    var htmlContent = `
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Fullscreen Game</title>
+    <title>${titleText} - Fullscreen</title>
     <style>
         html, body { height: 100%; margin: 0; overflow: hidden; }
         #iframe { width: 100vw; height: 100vh; border: none; }
     </style>
     <script src="https://unpkg.com/@ruffle-rs/ruffle"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            document.documentElement.requestFullscreen();
-        });
-    </script>
+    <script>var playtimeName = "${pageName}";</script>
+    <script>${PagesScript}</script>
 </head>
 <body>
     ${gameElement.tagName === 'IFRAME'
-        ? `<iframe id="iframe" src="${gameSrc}"></iframe>`
-        : `<embed id="iframe" src="${gameSrc}" type="application/x-shockwave-flash">`
-    }
+                            ? `<iframe id="iframe" src="${gameSrc}"></iframe>`
+                            : `<embed id="iframe" src="${gameSrc}" type="application/x-shockwave-flash">`
+                        }
+    <script>${playtimeScript}</script>
+    <script>${hashSyncScript}</script>
 </body>
 </html>
+                    `;
 
-    `;
+                    // Create a Blob and URL for the HTML content
+                    var blob = new Blob([htmlContent], { type: 'text/html' });
+                    var blobUrl = URL.createObjectURL(blob);
 
-    // Create a Blob and URL for the HTML content
-    var blob = new Blob([htmlContent], { type: 'text/html' });
-    var blobUrl = URL.createObjectURL(blob);
+                    // Open the new tab with the Blob URL
+                    var newTab = window.open(blobUrl, '_blank');
 
-    // Open the new tab with the Blob URL
-    var newTab = window.open(blobUrl, '_blank');
+                    if (!newTab) {
+                        alert('Failed to open new tab. Please check your browser settings.');
+                    }
 
-    if (!newTab) {
-        alert('Failed to open new tab. Please check your browser settings.');
-    }
-
-    // Clean up Blob URL
-    newTab.addEventListener('unload', () => {
-        URL.revokeObjectURL(blobUrl);
-    });
+                    // Clean up Blob URL
+                    newTab.addEventListener('unload', () => {
+                        URL.revokeObjectURL(blobUrl);
+                    });
+                });
+            });
+        })
+        .catch(error => {
+            console.error('Error fetching playtime.js or pages.js:', error);
+        });
 }
-document.addEventListener('DOMContentLoaded', function () {
-    const fixedBackgroundImg = document.querySelector('.fixed-background');
 
-    // Default customization settings
-    const defaultCustomisation = [
-        '/background.png',  // Default background image
-        '#111E2C',          // Default primary color
-        '#58AAFC',          // Default secondary color
-        '1280'              // Default background resolution
-    ].join('\n');
+function applyStoredSettings() {
+    // Preset values
+    const presetBackgroundImage = '/background.png';
+    const presetPrimaryColor = '#111E2C';
+    const presetSecondaryColor = '#58AAFC';
+    const presetBackgroundRes = '100';
 
-    // Store the default values in the "customisation" key in localStorage
-    localStorage.setItem('customisation', defaultCustomisation);
+    // Get the "customisation" data from localStorage
+    const customisationData = localStorage.getItem('customisation');
 
-    // Split the data to get each individual setting
-    const [backgroundImage, primaryColor, secondaryColor, backgroundRes] = defaultCustomisation.split('\n');
+    if (customisationData) {
+        // Split the data by newline to get each individual setting
+        const lines = customisationData.split('\n');
 
-    // Apply the background image and resolution if available
-    if (fixedBackgroundImg) {
-        fixedBackgroundImg.style.backgroundImage = `url('${backgroundImage}')`;
+        // Check if customisation matches the default
+        const isDefault = lines.length === 5 &&
+        lines[0] === '' &&
+        lines[1] === '' &&
+        lines[2] === '' &&
+        lines[3] === '' &&
+        lines[4] === 'default';
+        // Set values based on whether "default" is detected
+        let backgroundImage, primaryColor, secondaryColor, backgroundRes;
+        if (isDefault) {
+            backgroundImage = `url('${presetBackgroundImage}')`;
+            primaryColor = presetPrimaryColor;
+            secondaryColor = presetSecondaryColor;
+            backgroundRes = presetBackgroundRes;
+        } else {
+            // Extract customization values if no "default" line is found
+            [backgroundImage, primaryColor, secondaryColor, backgroundRes] = lines;
 
-        const backgroundResValue = parseInt(backgroundRes.trim());
-        if (!isNaN(backgroundResValue)) {
-            fixedBackgroundImg.style.backgroundSize = `${backgroundResValue}px auto`;
+            if (backgroundImage) {
+                backgroundImage = `url('${backgroundImage}')`;
+            }
+        }
+
+        const fixedBackgroundImg = document.querySelector('.fixed-background');
+
+        // Apply the background image if it exists
+        if (fixedBackgroundImg && backgroundImage) {
+            fixedBackgroundImg.style.backgroundImage = backgroundImage;
+        }
+
+        // Apply the primary color if it exists
+        if (primaryColor) {
+            document.documentElement.style.setProperty('--primary-color', primaryColor);
+        }
+
+        // Apply the secondary color if it exists
+        if (secondaryColor) {
+            document.documentElement.style.setProperty('--secondary-color', secondaryColor);
+        }
+
+        // Apply the background resolution if it exists
+        if (backgroundRes && fixedBackgroundImg) {
+            fixedBackgroundImg.style.backgroundSize = `${backgroundRes}vw auto`;
+        }
+
+        // Add the brightness checking and background color update here
+        // Function to calculate the brightness of a hex code
+        function hexToHSV(hex) {
+            // Extract RGB components from the hex code
+            const r = parseInt(hex.slice(1, 3), 16) / 255;
+            const g = parseInt(hex.slice(3, 5), 16) / 255;
+            const b = parseInt(hex.slice(5, 7), 16) / 255;
+
+            // Find the maximum and minimum values of RGB components
+            const max = Math.max(r, g, b);
+            const min = Math.min(r, g, b);
+
+            // V (Value) is the brightness in HSV
+            const v = max;
+
+            return v;
+        }
+
+        function getBrightness(hex) {
+            return hexToHSV(hex); // V component directly represents brightness
+        }
+
+        // Use the secondaryColor (which is a hex code) for brightness calculation
+        const hexCode = secondaryColor; // Replace 'secondaryColor' with the actual color variable
+
+        // Check if the hex code exists and is valid
+        if (hexCode && /^#[0-9A-F]{6}$/i.test(hexCode)) {
+            const brightness = getBrightness(hexCode);
+
+            // Determine background color based on brightness
+            const backgroundColor = brightness < 0.5 ? '#ffffff' : '#0c0c0c';
+            const backgroundColorText = brightness < 0.5 ? primaryColor : secondaryColor; // Text that goes over a Dark Background (description)
+
+            // Apply the background color using CSS variable
+            document.documentElement.style.setProperty('--background-color', backgroundColor);
+            document.documentElement.style.setProperty('--background-color-text', backgroundColorText);
         }
     }
+}
 
-    // Apply the primary and secondary colors
-    document.documentElement.style.setProperty('--primary-color', primaryColor);
-    document.documentElement.style.setProperty('--secondary-color', secondaryColor);
-
-    // Apply the secondary color to specific elements like the container
-    const container = document.querySelector('.container');
-    if (container) {
-        container.style.backgroundColor = secondaryColor;
-    }
-});
-
-// Automatically apply settings on window load
 window.addEventListener('load', applyStoredSettings);
+
+document.getElementById('settings-form').addEventListener('submit', function (event) {
+    event.preventDefault();
+
+    const backgroundImageValue = document.getElementById('background-image').value;
+    const primaryColorValue = document.getElementById('primary-color').value;
+    const secondaryColorValue = document.getElementById('background-color').value;
+    const backgroundResValue = document.getElementById('background-res').value;
+
+    // Combine the values into a single string, with each value separated by a newline
+    const customisationData = `${backgroundImageValue}\n${primaryColorValue}\n${secondaryColorValue}\n${backgroundResValue}`;
+
+    // Store the combined string in localStorage under the key "customisation"
+    localStorage.setItem('customisation', customisationData);
+
+    // Reload the page to apply changes
+    location.reload();
+});
